@@ -11,6 +11,9 @@ st.title("Ebay Scraper")
 
 st.write("Dieser Scraper durchsucht Ebay-Kleinanzeigen nach deiner Query und speichert die Ergebnisse in einer Excel-Datei.")
 
+# Eingabe für den vorgefertigten Link
+custom_url = st.text_input("Füge einen vorgefertigten Link ein (optional)")
+
 # Eingabe für die Query
 query = st.text_input("Bitte gebe deine Query an")
 
@@ -91,9 +94,7 @@ def generate_url(query, category, state, provider, price_min, price_max, year_mi
     
     return url
 
-def scrape_kleinanzeigen(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type):
-    url = generate_url(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type)
-    
+def scrape_kleinanzeigen(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36'
     }
@@ -127,9 +128,14 @@ if st.button("Scraper starten"):
         st.write(f"Der Scraper startet in {wait_time} Sekunden...")
         time.sleep(wait_time)
     
+    if custom_url:
+        url = custom_url
+    else:
+        url = generate_url(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type)
+    
     st.write(prefix + f"Es wird nach {query} gesucht...")
     
-    listings = scrape_kleinanzeigen(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type)
+    listings = scrape_kleinanzeigen(url)
     if listings:
         save_to_excel(listings)
         st.write(prefix + f"Durchschnittspreis: {sum([l['Preis'] for l in listings if l['Preis']])/len(listings):.2f} €")
@@ -139,5 +145,8 @@ if st.button("Scraper starten"):
     time.sleep(random.uniform(3, 7))
 
 if st.button("Generierten Link anzeigen"):
-    url = generate_url(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type)
+    if custom_url:
+        url = custom_url
+    else:
+        url = generate_url(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type)
     st.write(f"Generierter Link: {url}")
