@@ -1,5 +1,5 @@
 streamlit
-# Scraper:
+
 requests
 BeautifulSoup4
 pandas
