@@ -1,9 +1,5 @@
 streamlit
-# Scraper:
+
 requests
-time
-bs4
-BeautifulSoup
+BeautifulSoup4
 pandas
-random
-re
