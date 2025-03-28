@@ -1,7 +1,6 @@
 streamlit
 # Scraper:
 requests
-time
 bs4
 BeautifulSoup
 pandas
