@@ -103,6 +103,8 @@ def scrape_kleinanzeigen(url):
     if not soup:
         return []
     
+    print(soup.prettify())
+    
     listings = []
     srchRslts = soup.find_all("li")
     
@@ -130,10 +132,10 @@ if st.button("Scraper starten"):
     
     if custom_url:
         url = custom_url
+        st.write(prefix + f"Es wird nach den Ergebnissen des Custom-Links gesucht: {custom_url}")
     else:
         url = generate_url(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type)
-    
-    st.write(prefix + f"Es wird nach {query} gesucht...")
+        st.write(prefix + f"Es wird nach {query} gesucht...")
     
     listings = scrape_kleinanzeigen(url)
     if listings:
