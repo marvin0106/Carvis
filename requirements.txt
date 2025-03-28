@@ -4,5 +4,4 @@ requests
 bs4
 BeautifulSoup
 pandas
-random
 re
