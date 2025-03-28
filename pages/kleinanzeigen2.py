@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import pandas as pd
 import time
+from webdriver_manager.chrome import ChromeDriverManager
 
 # Streamlit UI
 st.title("Ebay Scraper mit Selenium")
@@ -30,10 +31,10 @@ if st.button("Scraper starten"):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.binary_location = "/usr/bin/google-chrome"  # Pfad zur Google-Chrome-Binary
 
-        # Pfad zum ChromeDriver (stellen Sie sicher, dass der ChromeDriver installiert ist)
-        service = Service("/usr/bin/chromedriver")  # Passen Sie den Pfad an, falls nötig
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        # Pfad zum ChromeDriver explizit angeben
+        driver = webdriver.Chrome(service=Service("/usr/local/bin/chromedriver"), options=chrome_options)
 
         try:
             # Öffnen der URL
