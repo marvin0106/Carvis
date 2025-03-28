@@ -1,7 +1,6 @@
 streamlit
 # Scraper:
 requests
-bs4
-BeautifulSoup
+BeautifulSoup4
 pandas
 re
