@@ -103,8 +103,9 @@ def scrape_kleinanzeigen(url):
     if not soup:
         return []
     
-    print(soup.prettify())
-    
+    # Debugging: HTML-Inhalt der Seite ausgeben
+    st.text_area("HTML-Inhalt der Seite", soup.prettify(), height=300)
+
     listings = []
     srchRslts = soup.find_all("li")
     
