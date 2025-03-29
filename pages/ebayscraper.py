@@ -6,6 +6,7 @@ import pandas as pd
 import time
 import random
 import re
+from fake_useragent import UserAgent
 
 st.title("Ebay Scraper")
 
@@ -59,12 +60,30 @@ def clean_price(price_text):
 
 def get_soup(url, headers):
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        # Zusätzliche Header hinzufügen
+        headers.update({
+            'Accept-Language': 'de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Referer': 'https://www.google.com/',
+            'DNT': '1',  # Do Not Track
+        })
+        
+        # Anfrage senden
+        headers['User-Agent'] = UserAgent().random
+        cookies = {'cookie_name': 'cookie_value'}
+        response = requests.get(url, headers=headers, cookies=cookies, timeout=10)
+        response.raise_for_status()  # Löst eine Exception aus, wenn der HTTP-Statuscode nicht 200 ist
         return BeautifulSoup(response.content, "html.parser")
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"HTTP-Fehler: {http_err} (Statuscode: {response.status_code})")
+    except requests.exceptions.ConnectionError:
+        st.error("Verbindungsfehler: Überprüfe deine Internetverbindung.")
+    except requests.exceptions.Timeout:
+        st.error("Timeout-Fehler: Die Anfrage hat zu lange gedauert.")
     except requests.exceptions.RequestException as e:
-        print(prefix + "Fehler bei der Anfrage: ", e)
-        return None
+        st.error(f"Allgemeiner Fehler bei der Anfrage: {e}")
+    return None
 
 def generate_url(query, category, state, provider, price_min, price_max, year_min, year_max, km_min, km_max, power_min, power_max, car_type):
     base_url = f"https://www.kleinanzeigen.de/s-{category}"
@@ -101,20 +120,58 @@ def scrape_kleinanzeigen(url):
     
     soup = get_soup(url, headers)
     if not soup:
+        st.error("Fehler beim Abrufen der Seite. Überprüfe die URL oder die Internetverbindung.")
         return []
     
     # Debugging: HTML-Inhalt der Seite ausgeben
     st.text_area("HTML-Inhalt der Seite", soup.prettify(), height=300)
 
     listings = []
-    srchRslts = soup.find_all("li")
+    # Suche nach Anzeigen-Elementen
+    ad_items = soup.find_all("article", class_="aditem")
+    st.write(f"Anzahl gefundener Anzeigen-Elemente: {len(ad_items)}")  # Debugging: Anzahl der gefundenen Elemente
     
-    for srchRslt in srchRslts:
-        price_tag = srchRslt.find("strong")
-        if price_tag:
-            price_text = price_tag.text.strip()
+    if not ad_items:
+        st.warning("Keine Anzeigen-Elemente gefunden. Überprüfe die Struktur der Seite.")
+        return []
+
+    for ad in ad_items:
+        try:
+            # Datum des Inserats
+            date_tag = ad.find("div", class_="aditem-main--top--right")
+            date = date_tag.text.strip() if date_tag else "Kein Datum"
+            
+            # Titel der Anzeige
+            title_tag = ad.find("h2", class_="text-module-begin")
+            title = title_tag.text.strip() if title_tag else "Kein Titel"
+            
+            # Stadt und Postleitzahl
+            location_tag = ad.find("div", class_="aditem-main--top--left")
+            location = location_tag.text.strip() if location_tag else "Keine Adresse"
+            city, postal_code = location.split(" ", 1) if " " in location else (location, "Keine Postleitzahl")
+            
+            # Preis der Anzeige
+            price_tag = ad.find("p", class_="aditem-main--middle--price-shipping--price")
+            price_text = price_tag.text.strip() if price_tag else "Kein Preis"
             price = clean_price(price_text)
-            listings.append({"Preis": price, "Verhandelbar": "VB" in price_text})
+            vb = "VB" in price_text
+            
+            # Link zur Anzeige
+            link = ad.get("data-href")
+            link = f"https://www.kleinanzeigen.de{link}" if link else "Kein Link"
+            
+            # Daten speichern
+            listings.append({
+                "Datum": date,
+                "Titel": title,
+                "Stadt": city,
+                "Postleitzahl": postal_code,
+                "Preis": price,
+                "VB": vb,
+                "Link": link
+            })
+        except Exception as e:
+            st.warning(f"Fehler beim Verarbeiten einer Anzeige: {e}")
     
     return listings
 
