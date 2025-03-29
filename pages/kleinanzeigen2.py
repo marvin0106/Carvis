@@ -33,8 +33,8 @@ if st.button("Scraper starten"):
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.binary_location = "/usr/bin/google-chrome"  # Pfad zur Google-Chrome-Binary
 
-        # Pfad zum ChromeDriver explizit angeben
-        driver = webdriver.Chrome(service=Service("/usr/local/bin/chromedriver"), options=chrome_options)
+        # ChromeDriver mit webdriver_manager verwalten
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
         try:
             # Öffnen der URL
@@ -44,6 +44,10 @@ if st.button("Scraper starten"):
             # Warten, bis die Anzeigen geladen sind
             wait = WebDriverWait(driver, 20)  # Timeout auf 20 Sekunden erhöhen
             wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "aditem")))
+
+            # Debugging: HTML-Inhalt der Seite ausgeben
+            page_source = driver.page_source
+            st.text_area("HTML-Inhalt der Seite", page_source, height=300)
 
             # Anzeigen scrapen
             ads = driver.find_elements(By.CLASS_NAME, "aditem")
